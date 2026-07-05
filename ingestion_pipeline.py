@@ -16,22 +16,38 @@ def load_documents(docs_path = "Doc"):
         raise FileNotFoundError(f" The directory {docs_path} does not exists. Please create it and add yoour company files.")
     
     #Load all (.pdf) files from the Doc directory
-    loader = DirectoryLoader( #Directory loader class from Langchain_community.document_loaders module. This class is used to load all the files from a directory. It takes three arguments: path, glob, and loader_cls.
+    loader = DirectoryLoader(
         path = docs_path,
-        glob = "**/*.pdf", #glob is a pattern matching syntax that allows us to specify which files we want to load from the directory. In this case, we are loading all PDF files
-        loader_cls = PyPDFLoader  # we are using the PyPDFLoader class to load PDF files.
+        glob = "**/*.pdf",
+        loader_cls = PyPDFLoader
     )
 
-    documents = loader.load() #Load the documents from the directory
+    # PyPDFLoader returns one Document per page — merge pages per file
+    raw_documents = loader.load()
     
-    if len(documents) == 0:
+    if len(raw_documents) == 0:
         raise FileNotFoundError(f"No .pdf fies found in the directory {docs_path}. Please add your company documents.")
+    
+    # Group pages by source file and merge them into one Document per file
+    from collections import OrderedDict
+    merged = OrderedDict()
+    for doc in raw_documents:
+        source = doc.metadata["source"]
+        if source not in merged:
+            merged[source] = {"content": "", "metadata": doc.metadata.copy()}
+        merged[source]["content"] += doc.page_content + "\n\n"
+
+    documents = []
+    for source, data in merged.items():
+        from langchain_core.documents import Document
+        doc = Document(page_content=data["content"].strip(), metadata=data["metadata"])
+        documents.append(doc)
     
     for i, doc in enumerate(documents):
         print(f"\nDocument {i + 1}:")
         print(f" Source: {doc.metadata['source']}")
         print(f" Content length: {len(doc.page_content)} characters")
-        print(f" Content preview: {doc.page_content[:200]}...")  # Print the first 200 characters of the content
+        print(f" Content preview: {doc.page_content[:200]}...")
         print(f" Metadata: {doc.metadata}")
 
     return documents
@@ -54,8 +70,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()    
-
-
-
-
+    main()
