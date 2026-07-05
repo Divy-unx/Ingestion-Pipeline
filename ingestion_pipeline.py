@@ -1,11 +1,20 @@
 import os 
+from pathlib import Path
 from langchain_community.document_loaders import PyPDFLoader, DirectoryLoader # importing these two diff classes would helps us  to read text files, docx files 
 from langchain_text_splitters import CharacterTextSplitter # To chunk the doc
 from langchain_openai import OpenAIEmbeddings #TO conveert the chunks into vector embeddings 
 from langchain_chroma import Chroma # we can host the dB locally 
 from dotenv import load_dotenv 
 
-load_dotenv()
+PROJECT_ROOT = Path(__file__).resolve().parent
+load_dotenv(PROJECT_ROOT / ".env")
+
+
+def get_openai_api_key():
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key or api_key == "your_openai_api_key_here":
+        raise ValueError("OPENAI_API_KEY is missing. Add it to the .env file in this project folder.")
+    return api_key
 
 def load_documents(docs_path = "Doc"):
     #Load all the files from the Doc Directory 
@@ -62,18 +71,43 @@ def split_documents(documents, chunk_size=200, chunk_overlap=0):
     chunks = text_splitter.split_documents(documents)
 
     if chunks:
-        for i, chunk in enumerate(chunks):
-            print(f"\n----Chunk {i + 1} ----")
-            print(f" SOurce: {chunk.metadata['source']}")
-            print(f" Length: {len(chunk.page_content)} characters")
-            print(f" Content: ")
-            print(chunk.page_content)
-            print("-" * 50)
-        if len(chunks) > 5:
-            print(f"\n... and {len(chunks) - 5} more chunks.")    
+        print(f" SOurce: {chunk.metadata['source']}")
+        print(f" Length: {len(chunk.page_content)} characters")
+        print(f" Content: ")
+        print(chunk.page_content)
+        print("-" * 50)
+    
+    if len(chunks) > 5:
+        print(f"\n... and {len(chunks) - 5} more chunks.")    
         
 
     return chunks
+
+def create_embeddings(chunks, persistence_dir="db/chroma_db"): #we pass chunks and the driectory where we want to store the vectoir embeddings locally
+    #Convert the chunks into vector embeddings and store them in a vector database
+    print("Creating embeddings and storing them in ChromaDB...")
+    embeddings_model = OpenAIEmbeddings(
+        model="text-embedding-3-small",
+        api_key=get_openai_api_key()
+    )
+    
+    #Create a Chroma vector database from the chunks and embeddings
+    print("Creatning Vector Store...")
+    # It takes all the chunks and converts into vector embeddings using the OpenAI's embedding model and stores in a Chroma Vector dB.
+    vectorstore = Chroma.from_documents(
+        documents = chunks,
+        embedding = embeddings_model,
+        persist_directory=persistence_dir,
+        collection_metadata = {"hnsw:space":"cosine"} 
+    )
+
+    print("----Finished creating vector store----")
+
+    print(f"Vector store created and saved to {persistence_dir}.")
+
+
+    vectorstore.persist()
+    return vectorstore
 
     
     
@@ -91,6 +125,8 @@ def main():
 
 
     #3 Convert the chunks into vector embeddings 
+    vectorstore = create_embeddings(chunks)
+
     #4 Store the embeddings in a vector database
     #5 Create a retriever from the database
     #6 Create a question answering chain using the retriever and a language model
