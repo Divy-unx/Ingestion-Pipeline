@@ -52,6 +52,32 @@ def load_documents(docs_path = "Doc"):
 
     return documents
 
+def split_documents(documents, chunk_size=200, chunk_overlap=0):
+    #Split the documents into smaller chunks with overlap
+    print("Splitting documents into chunks...")
+    text_splitter = CharacterTextSplitter( # text splitting class to split the documents into smaller chunks with overlap
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap
+    )
+    chunks = text_splitter.split_documents(documents)
+
+    if chunks:
+        for i, chunk in enumerate(chunks):
+            print(f"\n----Chunk {i + 1} ----")
+            print(f" SOurce: {chunk.metadata['source']}")
+            print(f" Length: {len(chunk.page_content)} characters")
+            print(f" Content: ")
+            print(chunk.page_content)
+            print("-" * 50)
+        if len(chunks) > 5:
+            print(f"\n... and {len(chunks) - 5} more chunks.")    
+        
+
+    return chunks
+
+    
+    
+
 
 def main():
     print("Main function")
@@ -59,7 +85,11 @@ def main():
     #1 Load the documents
     documents = load_documents(docs_path = "Doc")
 
+    
     #2 Split the documents into chunks
+    chunks = split_documents(documents)
+
+
     #3 Convert the chunks into vector embeddings 
     #4 Store the embeddings in a vector database
     #5 Create a retriever from the database
