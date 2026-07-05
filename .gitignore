@@ -1,0 +1,10 @@
+.env
+.venv/
+venv/
+.venv_py314_backup/
+__pycache__/
+*.py[cod]
+
+Doc/
+chroma_db/
+.vscode/
