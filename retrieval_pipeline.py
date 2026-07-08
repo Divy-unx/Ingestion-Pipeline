@@ -1,9 +1,8 @@
 import os
 from pathlib import Path
 
-from openai import AuthenticationError, BadRequestError
 from langchain_chroma import Chroma
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 from langchain_huggingface import HuggingFaceEmbeddings
 from dotenv import load_dotenv
 
@@ -58,10 +57,9 @@ for i, doc in enumerate(relevant_docs, 1):
 
 context = "\n\n".join(doc.page_content for doc in relevant_docs)
 
-llm = ChatOpenAI(
+llm = ChatGroq(
     model=groq_model,
     api_key=groq_api_key,
-    base_url="https://api.groq.com/openai/v1",
     temperature=0,
 )
 
@@ -76,7 +74,7 @@ Question:
 
 try:
     response = llm.invoke(prompt)
-except (AuthenticationError, BadRequestError) as exc:
+except Exception as exc:
     raise ValueError("Groq API request failed. Check that groq_api_key in .env is a valid Groq API key.") from exc
 
 print("--- Answer ---")
