@@ -1,0 +1,9 @@
+{
+	"folders": [
+		{
+			"name": "ingestion_pipeline",
+			"path": "."
+		}
+	],
+	"settings": {}
+}
