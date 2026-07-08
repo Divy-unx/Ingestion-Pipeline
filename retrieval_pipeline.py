@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-MODEL_CACHE_DIR = PROJECT_ROOT / "models"
+MODEL_CACHE_DIR = Path(os.getenv("MODEL_CACHE_DIR", "/tmp/ingestion_pipeline_models"))
 groq_model = os.getenv("groq_model", "llama-3.3-70b-versatile")
 
 load_dotenv(PROJECT_ROOT / ".env")

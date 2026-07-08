@@ -7,4 +7,6 @@ __pycache__/
 
 Doc/
 chroma_db/
+db/
+models/
 .vscode/

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from langchain_community.document_loaders import PyPDFLoader, DirectoryLoader  # importing these two diff classes would helps us  to read text files, docx files
@@ -16,7 +17,7 @@ except ImportError:
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-MODEL_CACHE_DIR = PROJECT_ROOT / "models"
+MODEL_CACHE_DIR = Path(os.getenv("MODEL_CACHE_DIR", "/tmp/ingestion_pipeline_models"))
 
 load_dotenv(PROJECT_ROOT / ".env")
 
